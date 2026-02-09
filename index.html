@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>TV Retrô Pro - GitHub Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+        :root {
+            --tv-color: #ffb74d;
+            --tv-shadow: #e65100;
+            --w: 260px; --h: 190px; --d: 150px;
+        }
+
+        body {
+            margin: 0; height: 100vh; background: #f0f0f0;
+            display: flex; justify-content: center; align-items: center;
+            perspective: 1200px; font-family: 'VT323', monospace;
+            overflow: hidden;
+        }
+
+        /* --- CENA ISOMÉTRICA CORRIGIDA --- */
+        .scene {
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-15deg) rotateY(35deg);
+        }
+
+        .tv-box {
+            position: relative; width: var(--w); height: var(--h);
+            transform-style: preserve-3d;
+        }
+
+        .face { position: absolute; box-sizing: border-box; backface-visibility: hidden; }
+
+        /* Construção Sólida para evitar os erros da imagem anterior */
+        .front {
+            width: var(--w); height: var(--h); background: var(--tv-color);
+            transform: translateZ(75px); border-radius: 15px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .back {
+            width: var(--w); height: var(--h); background: var(--tv-shadow);
+            transform: rotateY(180deg) translateZ(75px); border-radius: 15px;
+        }
+
+        .right {
+            width: var(--d); height: var(--h); background: var(--tv-shadow);
+            transform: rotateY(90deg) translateZ(130px); border-radius: 10px;
+        }
+
+        .left {
+            width: var(--d); height: var(--h); background: var(--tv-shadow);
+            transform: rotateY(-90deg) translateZ(130px); border-radius: 10px;
+        }
+
+        .top {
+            width: var(--w); height: var(--d); background: var(--tv-color);
+            transform: rotateX(90deg) translateZ(95px); filter: brightness(1.1);
+            border-radius: 10px;
+        }
+
+        /* --- TELA E CONTEÚDO --- */
+        .screen-container {
+            width: 170px; height: 135px; background: #000;
+            border-radius: 20px 20px 20px 5px; border: 5px solid #332211;
+            position: relative; overflow: hidden; margin-right: 15px;
+        }
+
+        /* Efeito de Chuvisco (Static) para erros ou transição */
+        .static {
+            position: absolute; inset: 0;
+            background: url('https://media.giphy.com/media/oEI9uWUicG3Ze/giphy.gif');
+            background-size: cover; opacity: 0.15; z-index: 5; pointer-events: none;
+        }
+
+        #video-frame, #fallback-player {
+            width: 100%; height: 100%; border: none;
+            position: absolute; top: 0; left: 0;
+        }
+
+        #fallback-player { display: none; object-fit: cover; }
+
+        /* --- DETALHES --- */
+        .antennas {
+            position: absolute; top: 20px; left: 50%;
+            transform: translateX(-50%) translateZ(0);
+        }
+        .rod {
+            position: absolute; bottom: 0; width: 3px; height: 110px;
+            background: #aaa; transform-origin: bottom;
+        }
+        .rod.l { transform: rotateZ(-25deg); left: -5px; }
+        .rod.r { transform: rotateZ(25deg); left: 5px; }
+
+        .side-panel {
+            display: flex; flex-direction: column; gap: 12px;
+        }
+        .dial { width: 22px; height: 22px; background: #443322; border-radius: 50%; border: 2px solid #221100; }
+
+        /* --- CONTROLE REMOTO (RELEVO POSITIVO) --- */
+        .remote {
+            position: absolute; bottom: -80px; right: -80px;
+            width: 45px; height: 90px; background: #ddd;
+            border-radius: 8px; transform: translateZ(10px);
+            box-shadow: 
+                0 4px 0 #bbb, 
+                0 8px 15px rgba(0,0,0,0.2);
+            display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 8px;
+            cursor: pointer; transition: 0.1s;
+        }
+        .remote:active { transform: translateZ(5px); box-shadow: 0 2px 0 #bbb; }
+        .btn { width: 25px; height: 12px; background: #999; border-radius: 3px; }
+        .power-btn { width: 15px; height: 15px; background: #ff4444; border-radius: 50%; }
+
+        .led {
+            position: absolute; top: 10px; right: 10px;
+            width: 8px; height: 8px; background: #0f0; border-radius: 50%;
+            box-shadow: 0 0 5px #0f0; animation: blink 1s infinite;
+        }
+        @keyframes blink { 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+
+<div class="scene">
+    <div class="tv-box">
+        <div class="face top">
+            <div class="antennas">
+                <div class="rod l"></div>
+                <div class="rod r"></div>
+            </div>
+        </div>
+        <div class="face back"></div>
+        <div class="face left"></div>
+        <div class="face right"></div>
+        
+        <div class="face front">
+            <div class="screen-container">
+                <div class="led"></div>
+                <div class="static"></div>
+                
+                <div id="video-placeholder">
+                    <div id="yt-player"></div>
+                </div>
+                <video id="fallback-player" loop muted playsinline></video>
+            </div>
+
+            <div class="side-panel">
+                <div class="dial"></div>
+                <div class="dial"></div>
+                <div style="width:25px; height:40px; background: repeating-linear-gradient(0deg, #221100 0 2px, transparent 2px 4px)"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="remote" id="remote">
+        <div class="power-btn"></div>
+        <div class="btn"></div>
+        <div class="btn" style="background:#55acee"></div>
+    </div>
+</div>
+
+<script>
+    // Configurações
+    const ytVideoId = 'jfKfPfyJRdk'; // Lofi Girl (Geralmente aceita embed)
+    const fallbackVideo = 'https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4';
+    
+    let player;
+    let usingFallback = false;
+
+    // API do YouTube
+    var tag = document.createElement('script');
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    function onYouTubeIframeAPIReady() {
+        player = new YT.Player('yt-player', {
+            height: '100%',
+            width: '100%',
+            videoId: ytVideoId,
+            playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1, 'loop': 1, 'playlist': ytVideoId },
+            events: {
+                'onError': handlePlayerError,
+                'onReady': (e) => e.target.playVideo()
+            }
+        });
+    }
+
+    function handlePlayerError(event) {
+        console.warn("YouTube bloqueado. Ativando vídeo reserva...");
+        switchToFallback();
+    }
+
+    function switchToFallback() {
+        if(usingFallback) return;
+        usingFallback = true;
+        document.getElementById('video-placeholder').style.display = 'none';
+        const v = document.getElementById('fallback-player');
+        v.style.display = 'block';
+        v.src = fallbackVideo;
+        v.play();
+    }
+
+    // Botão do controle para "consertar" se travar
+    document.getElementById('remote').addEventListener('click', () => {
+        if(!usingFallback) {
+            switchToFallback();
+        } else {
+            // Se já estiver no fallback, apenas dá um efeito de brilho
+            document.querySelector('.static').style.opacity = '0.4';
+            setTimeout(() => document.querySelector('.static').style.opacity = '0.15', 200);
+        }
+    });
+
+    // Se o YouTube demorar mais de 5 segundos para carregar, assume erro e muda
+    setTimeout(() => {
+        if (!usingFallback && (!player || typeof player.getPlayerState !== 'function')) {
+            switchToFallback();
+        }
+    }, 5000);
+</script>
+
+</body>
+</html>
