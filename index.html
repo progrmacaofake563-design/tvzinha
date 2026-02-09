@@ -2,224 +2,262 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>TV Retrô Pro - GitHub Edition</title>
+    <title>TV Retrô Ultra - Versão Gigante</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
         :root {
-            --tv-color: #ffb74d;
-            --tv-shadow: #e65100;
-            --w: 260px; --h: 190px; --d: 150px;
+            /* Tamanho aumentado */
+            --w: 380px; 
+            --h: 260px; 
+            --d: 200px;
+            --tv-main: #ff9800;
+            --tv-side: #e65100;
         }
 
         body {
-            margin: 0; height: 100vh; background: #f0f0f0;
+            margin: 0; height: 100vh; background: #eaedf2;
             display: flex; justify-content: center; align-items: center;
-            perspective: 1200px; font-family: 'VT323', monospace;
+            perspective: 1500px; font-family: 'VT323', monospace;
             overflow: hidden;
         }
 
-        /* --- CENA ISOMÉTRICA CORRIGIDA --- */
+        /* --- CONTAINER 3D --- */
         .scene {
             position: relative;
             transform-style: preserve-3d;
+            /* Ângulo clássico da sua primeira imagem */
             transform: rotateX(-15deg) rotateY(35deg);
         }
 
-        .tv-box {
-            position: relative; width: var(--w); height: var(--h);
+        .tv-cube {
+            position: relative;
+            width: var(--w);
+            height: var(--h);
             transform-style: preserve-3d;
         }
 
-        .face { position: absolute; box-sizing: border-box; backface-visibility: hidden; }
+        /* --- FACES COM FECHAMENTO CALCULADO --- */
+        .face {
+            position: absolute;
+            box-sizing: border-box;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
 
-        /* Construção Sólida para evitar os erros da imagem anterior */
+        /* Frente: Posicionada na metade da profundidade à frente */
         .front {
-            width: var(--w); height: var(--h); background: var(--tv-color);
-            transform: translateZ(75px); border-radius: 15px;
+            width: var(--w); height: var(--h);
+            background: var(--tv-main);
+            transform: translateZ(calc(var(--d) / 2));
+            border-radius: 20px;
             display: flex; align-items: center; justify-content: center;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            z-index: 2;
         }
 
+        /* Trás: Posicionada na metade da profundidade atrás */
         .back {
-            width: var(--w); height: var(--h); background: var(--tv-shadow);
-            transform: rotateY(180deg) translateZ(75px); border-radius: 15px;
+            width: var(--w); height: var(--h);
+            background: var(--tv-side);
+            transform: rotateY(180deg) translateZ(calc(var(--d) / 2));
+            border-radius: 20px;
         }
 
+        /* Lado Direito */
         .right {
-            width: var(--d); height: var(--h); background: var(--tv-shadow);
-            transform: rotateY(90deg) translateZ(130px); border-radius: 10px;
+            width: var(--d); height: var(--h);
+            background: var(--tv-side);
+            /* Gira 90º e move metade da largura para o lado */
+            transform: rotateY(90deg) translateZ(calc(var(--w) / 2));
+            left: calc(50% - (var(--d) / 2));
         }
 
+        /* Lado Esquerdo */
         .left {
-            width: var(--d); height: var(--h); background: var(--tv-shadow);
-            transform: rotateY(-90deg) translateZ(130px); border-radius: 10px;
+            width: var(--d); height: var(--h);
+            background: var(--tv-side);
+            transform: rotateY(-90deg) translateZ(calc(var(--w) / 2));
+            left: calc(50% - (var(--d) / 2));
         }
 
+        /* Topo: Fecha o teto perfeitamente */
         .top {
-            width: var(--w); height: var(--d); background: var(--tv-color);
-            transform: rotateX(90deg) translateZ(95px); filter: brightness(1.1);
+            width: var(--w); height: var(--d);
+            background: var(--tv-main);
+            filter: brightness(1.1);
+            transform: rotateX(90deg) translateZ(calc(var(--d) / 2));
+            top: calc(50% - (var(--d) / 2));
             border-radius: 10px;
         }
 
-        /* --- TELA E CONTEÚDO --- */
-        .screen-container {
-            width: 170px; height: 135px; background: #000;
-            border-radius: 20px 20px 20px 5px; border: 5px solid #332211;
-            position: relative; overflow: hidden; margin-right: 15px;
+        /* Base / Sombra */
+        .bottom {
+            width: var(--w); height: var(--d);
+            background: rgba(0,0,0,0.15);
+            transform: rotateX(-90deg) translateZ(calc(var(--h) - (var(--d) / 2)));
+            top: calc(50% - (var(--d) / 2));
+            filter: blur(20px);
+            border-radius: 50%;
         }
 
-        /* Efeito de Chuvisco (Static) para erros ou transição */
-        .static {
-            position: absolute; inset: 0;
-            background: url('https://media.giphy.com/media/oEI9uWUicG3Ze/giphy.gif');
-            background-size: cover; opacity: 0.15; z-index: 5; pointer-events: none;
+        /* --- CONTEÚDO DA TELA --- */
+        .bezel {
+            width: 70%; height: 75%;
+            background: #1a1a1a;
+            border: 8px solid #332211;
+            border-radius: 25px 25px 25px 10px;
+            position: relative; overflow: hidden;
+            box-shadow: inset 0 0 30px #000;
         }
 
-        #video-frame, #fallback-player {
+        .status-led {
+            position: absolute; top: 15px; right: 20px;
+            color: #0f0; font-size: 18px; z-index: 10;
+            text-shadow: 0 0 8px #0f0;
+        }
+
+        video, iframe {
             width: 100%; height: 100%; border: none;
-            position: absolute; top: 0; left: 0;
+            object-fit: cover;
         }
 
-        #fallback-player { display: none; object-fit: cover; }
-
-        /* --- DETALHES --- */
-        .antennas {
-            position: absolute; top: 20px; left: 50%;
-            transform: translateX(-50%) translateZ(0);
+        /* --- DETALHES VISUAIS --- */
+        .antenna-system {
+            position: absolute; top: -140px; left: 50%;
+            transform: translateX(-50%);
+            width: 4px; height: 4px;
+            transform-style: preserve-3d;
         }
         .rod {
-            position: absolute; bottom: 0; width: 3px; height: 110px;
-            background: #aaa; transform-origin: bottom;
+            position: absolute; bottom: 0;
+            width: 4px; height: 160px;
+            background: linear-gradient(#eee, #888);
+            transform-origin: bottom;
+            border-radius: 2px;
         }
-        .rod.l { transform: rotateZ(-25deg); left: -5px; }
-        .rod.r { transform: rotateZ(25deg); left: 5px; }
-
-        .side-panel {
-            display: flex; flex-direction: column; gap: 12px;
+        .rod.l { transform: rotateZ(-25deg); }
+        .rod.r { transform: rotateZ(25deg); }
+        .ball {
+            position: absolute; top: -5px; left: -2px;
+            width: 8px; height: 8px; background: #333; border-radius: 50%;
         }
-        .dial { width: 22px; height: 22px; background: #443322; border-radius: 50%; border: 2px solid #221100; }
 
-        /* --- CONTROLE REMOTO (RELEVO POSITIVO) --- */
+        .side-controls {
+            display: flex; flex-direction: column; gap: 15px;
+            margin-left: 15px;
+        }
+        .knob {
+            width: 35px; height: 35px;
+            background: #443322; border-radius: 50%;
+            border: 3px solid #221100;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* --- CONTROLE REMOTO NO CHÃO --- */
         .remote {
-            position: absolute; bottom: -80px; right: -80px;
-            width: 45px; height: 90px; background: #ddd;
-            border-radius: 8px; transform: translateZ(10px);
+            position: absolute; bottom: -100px; right: -120px;
+            width: 60px; height: 110px; background: #e0e0e0;
+            border-radius: 10px;
+            transform: translateZ(20px);
             box-shadow: 
-                0 4px 0 #bbb, 
-                0 8px 15px rgba(0,0,0,0.2);
-            display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 8px;
-            cursor: pointer; transition: 0.1s;
+                0 6px 0 #bbb, 
+                15px 15px 30px rgba(0,0,0,0.1);
+            display: flex; flex-direction: column; align-items: center; 
+            padding: 10px; gap: 10px; cursor: pointer;
         }
-        .remote:active { transform: translateZ(5px); box-shadow: 0 2px 0 #bbb; }
-        .btn { width: 25px; height: 12px; background: #999; border-radius: 3px; }
-        .power-btn { width: 15px; height: 15px; background: #ff4444; border-radius: 50%; }
+        .btn-pwr { width: 20px; height: 20px; background: #ff4b4b; border-radius: 50%; }
+        .btn-gen { width: 35px; height: 12px; background: #aaa; border-radius: 4px; }
 
-        .led {
-            position: absolute; top: 10px; right: 10px;
-            width: 8px; height: 8px; background: #0f0; border-radius: 50%;
-            box-shadow: 0 0 5px #0f0; animation: blink 1s infinite;
-        }
-        @keyframes blink { 50% { opacity: 0.3; } }
     </style>
 </head>
 <body>
 
 <div class="scene">
-    <div class="tv-box">
-        <div class="face top">
-            <div class="antennas">
-                <div class="rod l"></div>
-                <div class="rod r"></div>
-            </div>
-        </div>
+    <div class="tv-cube">
+        <div class="face bottom"></div>
         <div class="face back"></div>
         <div class="face left"></div>
         <div class="face right"></div>
+        <div class="face top">
+            <div class="antenna-system">
+                <div class="rod l"><div class="ball"></div></div>
+                <div class="rod r"><div class="ball"></div></div>
+            </div>
+        </div>
         
         <div class="face front">
-            <div class="screen-container">
-                <div class="led"></div>
-                <div class="static"></div>
+            <div class="bezel">
+                <div class="status-led" id="info">LIVE</div>
                 
-                <div id="video-placeholder">
-                    <div id="yt-player"></div>
+                <div id="player-wrapper" style="width:100%; height:100%;">
+                    <div id="yt-api-player"></div>
                 </div>
-                <video id="fallback-player" loop muted playsinline></video>
+                <video id="backup-player" loop muted playsinline style="display:none;"></video>
             </div>
 
-            <div class="side-panel">
-                <div class="dial"></div>
-                <div class="dial"></div>
-                <div style="width:25px; height:40px; background: repeating-linear-gradient(0deg, #221100 0 2px, transparent 2px 4px)"></div>
+            <div class="side-controls">
+                <div class="knob"></div>
+                <div class="knob"></div>
+                <div style="width:40px; height:60px; background: repeating-linear-gradient(0deg, #221100 0 2px, transparent 2px 5px); opacity:0.7"></div>
             </div>
         </div>
     </div>
 
-    <div class="remote" id="remote">
-        <div class="power-btn"></div>
-        <div class="btn"></div>
-        <div class="btn" style="background:#55acee"></div>
+    <div class="remote" id="remote-control">
+        <div class="btn-pwr"></div>
+        <div class="btn-gen"></div>
+        <div class="btn-gen" style="background:#4da6ff"></div>
+        <div class="btn-gen"></div>
     </div>
 </div>
 
 <script>
-    // Configurações
-    const ytVideoId = 'jfKfPfyJRdk'; // Lofi Girl (Geralmente aceita embed)
-    const fallbackVideo = 'https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4';
-    
-    let player;
-    let usingFallback = false;
+    // IDs de confiança (Lofi e Natureza)
+    const ytID = 'jfKfPfyJRdk'; 
+    const backupMP4 = 'https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4';
 
-    // API do YouTube
+    let player;
+    let isBackup = false;
+
+    // API Youtube
     var tag = document.createElement('script');
     tag.src = "https://www.youtube.com/iframe_api";
     var firstScriptTag = document.getElementsByTagName('script')[0];
     firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
     function onYouTubeIframeAPIReady() {
-        player = new YT.Player('yt-player', {
-            height: '100%',
-            width: '100%',
-            videoId: ytVideoId,
-            playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1, 'loop': 1, 'playlist': ytVideoId },
+        player = new YT.Player('yt-api-player', {
+            videoId: ytID,
+            playerVars: { 'autoplay': 1, 'controls': 0, 'mute': 1, 'loop': 1, 'playlist': ytID },
             events: {
-                'onError': handlePlayerError,
+                'onError': () => activateBackup(),
                 'onReady': (e) => e.target.playVideo()
             }
         });
     }
 
-    function handlePlayerError(event) {
-        console.warn("YouTube bloqueado. Ativando vídeo reserva...");
-        switchToFallback();
-    }
-
-    function switchToFallback() {
-        if(usingFallback) return;
-        usingFallback = true;
-        document.getElementById('video-placeholder').style.display = 'none';
-        const v = document.getElementById('fallback-player');
+    function activateBackup() {
+        if(isBackup) return;
+        isBackup = true;
+        document.getElementById('player-wrapper').style.display = 'none';
+        const v = document.getElementById('backup-player');
         v.style.display = 'block';
-        v.src = fallbackVideo;
+        v.src = backupMP4;
         v.play();
+        document.getElementById('info').innerText = "BACKUP";
     }
 
-    // Botão do controle para "consertar" se travar
-    document.getElementById('remote').addEventListener('click', () => {
-        if(!usingFallback) {
-            switchToFallback();
-        } else {
-            // Se já estiver no fallback, apenas dá um efeito de brilho
-            document.querySelector('.static').style.opacity = '0.4';
-            setTimeout(() => document.querySelector('.static').style.opacity = '0.15', 200);
-        }
+    // Controle Remoto
+    document.getElementById('remote-control').addEventListener('click', () => {
+        const info = document.getElementById('info');
+        info.innerText = "SWITCH";
+        activateBackup();
+        setTimeout(() => { info.innerText = isBackup ? "BACKUP" : "LIVE"; }, 1500);
     });
 
-    // Se o YouTube demorar mais de 5 segundos para carregar, assume erro e muda
+    // Timeout de segurança para o Youtube (5 segundos)
     setTimeout(() => {
-        if (!usingFallback && (!player || typeof player.getPlayerState !== 'function')) {
-            switchToFallback();
+        if(!isBackup && (!player || typeof player.getPlayerState !== 'function')) {
+            activateBackup();
         }
     }, 5000);
 </script>
